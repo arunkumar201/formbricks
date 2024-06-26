@@ -1,5 +1,6 @@
 "use client";
 
+import { isValidDateRange } from "@/app/(app)/(survey-editor)/environments/[environmentId]/surveys/[surveyId]/edit/lib/validation";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { ArrowUpRight, CheckIcon } from "lucide-react";
 import Link from "next/link";
@@ -129,7 +130,7 @@ export const ResponseOptionsCard = ({
     }
   };
 
-  const handleVerifyEmailToogle = () => {
+  const handleVerifyEmailToggle = () => {
     setVerifyEmailToggle((prev) => !prev);
 
     if (verifyEmailToggle && localSurvey.verifyEmail) {
@@ -142,8 +143,17 @@ export const ResponseOptionsCard = ({
     date?.setUTCHours(0, 0, 0, 0);
     date?.setDate(equivalentDate);
 
-    setRunOnDate(date);
-    setLocalSurvey({ ...localSurvey, runOnDate: date ?? null });
+    if (closeOnDate && !isValidDateRange(date, closeOnDate)) {
+      const closeDate = closeOnDate;
+
+      setCloseOnDate(date);
+      setRunOnDate(closeDate);
+
+      setLocalSurvey({ ...localSurvey, runOnDate: closeDate, closeOnDate: date });
+    } else {
+      setRunOnDate(date);
+      setLocalSurvey({ ...localSurvey, runOnDate: date ?? null });
+    }
   };
 
   const handleCloseOnDateChange = (date: Date) => {
@@ -151,8 +161,17 @@ export const ResponseOptionsCard = ({
     date?.setUTCHours(0, 0, 0, 0);
     date?.setDate(equivalentDate);
 
-    setCloseOnDate(date);
-    setLocalSurvey({ ...localSurvey, closeOnDate: date ?? null });
+    if (runOnDate && !isValidDateRange(runOnDate, date)) {
+      const runDate = runOnDate;
+
+      setCloseOnDate(runDate);
+      setRunOnDate(date);
+
+      setLocalSurvey({ ...localSurvey, closeOnDate: runDate, runOnDate: date });
+    } else {
+      setCloseOnDate(date);
+      setLocalSurvey({ ...localSurvey, closeOnDate: date ?? null });
+    }
   };
 
   const handleClosedSurveyMessageChange = ({
@@ -203,7 +222,7 @@ export const ResponseOptionsCard = ({
     });
   };
 
-  const hangleSingleUseEncryptionToggle = () => {
+  const handleSingleUseEncryptionToggle = () => {
     if (!singleUseEncryption) {
       setSingleUseEncryption(true);
       setLocalSurvey({
@@ -491,7 +510,7 @@ export const ResponseOptionsCard = ({
                         <Switch
                           id="encryption-switch"
                           checked={singleUseEncryption}
-                          onCheckedChange={hangleSingleUseEncryptionToggle}
+                          onCheckedChange={handleSingleUseEncryptionToggle}
                         />
                         <Label htmlFor="encryption-label">
                           <div className="ml-2">
@@ -510,7 +529,7 @@ export const ResponseOptionsCard = ({
               <AdvancedOptionToggle
                 htmlId="verifyEmailBeforeSubmission"
                 isChecked={verifyEmailToggle}
-                onToggle={handleVerifyEmailToogle}
+                onToggle={handleVerifyEmailToggle}
                 title="Verify email before submission"
                 description="Only let people with a real email respond."
                 childBorder={true}>
@@ -518,7 +537,7 @@ export const ResponseOptionsCard = ({
                   <div className="w-full cursor-pointer items-center bg-slate-50">
                     <Label htmlFor="howItWorks">How it works</Label>
                     <p className="mb-4 mt-2 text-sm text-slate-500">
-                      Respondants will receive the survey link via email.
+                      Respondents will receive the survey link via email.
                     </p>
                     <Label htmlFor="headline">Survey Name (Public)</Label>
                     <Input

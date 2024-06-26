@@ -482,3 +482,9 @@ export const isSurveyValid = (
 
   return true;
 };
+export const isValidDateRange = (startDate: Date, endDate: Date): boolean => {
+  if (startDate > endDate) {
+    return false;
+  }
+  return true;
+};
